@@ -1,7 +1,6 @@
-# tor-ddos-firewall-rules
-Tor DDoS firewall rules script
+# Tor DDoS firewall rules
 
-This script is based on the script(s) of https://github.com/Enkidu-6/tor-ddos. It should create more or less same firewall rules. The names of the ipsets, recent lists and hash limits differs. Also the iptables parameter for the destination ports are unified.
+This script is based on the script(s) of https://github.com/Enkidu-6/tor-ddos. You can find there more information. This script should create more or less the same firewall rules. The names of the ipsets, recent lists and hash limits differs. Also the iptables parameter for the destination ports are unified.
 
 After downloading the script, you must edit the variables `U_OR_4_PORTS` and `U_OR_6_PORTS` to reflect the IPs and ports used by your Tor relay.
 
@@ -22,3 +21,45 @@ Executing the script with only the parameters above will print the commands with
 `./tor_ddos_setup_firewall.sh refresh exec` will execute the commands of refresh.
 
 Currently missing is a command for cleaning up the blocking ipsets.
+
+This script needs Bash and use a lot of it array and string handling functions.
+
+## Install the script:
+Copy the configured script to the system folder
+```
+cp tor_ddos_setup_firewall.sh /usr/local/bin/
+```
+and set the permissions
+```
+chmod 755 /usr/local/bin/tor_ddos_setup_firewall.sh
+chown root: /usr/local/bin/tor_ddos_setup_firewall.sh
+```
+
+## Setup SystemD to start the script at startup
+Create companion folder for SystemD network daemon
+```
+mkdir /etc/systemd/system/systemd-networkd.service.d
+```
+Create a configuration file that will executed after network startup
+```
+vi /etc/systemd/system/systemd-networkd.service.d/tor-ddos-setup-firewall.conf
+```
+with this content
+```
+[Service]
+ExecStartPost=/usr/local/bin/tor_ddos_setup_firewall.sh setup exec
+```
+Reload SystemD configuration
+```
+systemctl daemon-reload
+```
+
+## Setup daily refresh of allow IPs
+Open your crontab file
+```
+crontab -e
+```
+and add this line
+```
+0 18 * * * /usr/local/bin/tor_ddos_setup_firewall.sh refresh exec
+```
