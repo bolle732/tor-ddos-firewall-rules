@@ -1,8 +1,8 @@
 #!/bin/bash
 # set -x
 
-U_OR_4_PORTS="192.0.2.1:443 203.0.113.1:9001"
-U_OR_6_PORTS="[2001:DB8::1]:995 [2001:DB8::2]:80"
+U_OR_4_PORTS="*:80 192.0.2.2:443 203.0.113.2:9001"
+U_OR_6_PORTS="[::]:80 [2001:DB8::2]:443 [2001:DB8::3]:995"
 
 G_TMP_PATH="/var/tmp"
 
@@ -36,7 +36,7 @@ porx()
 setupSystem()
 {
 	echo "### Setting up system configuration and modules..."
-	# GH: sysctl net.ipv4.ip_local_port_range="1025 65000"
+	porx "sysctl net.ipv4.ip_local_port_range=\"1025 65000\""
 	porx "echo 20 > /proc/sys/net/ipv4/tcp_fin_timeout"
 	porx "modprobe xt_recent ip_list_tot=10000"
 	echo ""
@@ -51,16 +51,16 @@ backupRules() {
 	return
 }
 
-cleanupRules() {
+flushRules() {
 	local -n L_IP="$1"
-	echo "### Cleaning up current iptable rules..."
+	echo "### Flushing current iptable rules..."
 	porx "${L_IP[b]} -t mangle -F"
 	echo ""
 	return
 }
 
-cleanupSets() {
-	echo "### Cleaning up current iptable sets..."
+destroySets() {
+	echo "### Destroying current iptable sets..."
 	porx "sleep 1"
 	porx "ipset destroy"
 	echo ""
@@ -164,14 +164,14 @@ case "$1" in
 	if [[ ! -z "$U_OR_4_PORTS" ]]
 	then
 		backupRules G_IP4
-		cleanupRules G_IP4
+		flushRules G_IP4
 	fi
 	if [[ ! -z "$U_OR_6_PORTS" ]]
 	then
 		backupRules G_IP6
-		cleanupRules G_IP6
+		flushRules G_IP6
 	fi
-	cleanupSets
+	destroySets
 	setupSystem
 	if [[ ! -z "$U_OR_4_PORTS" ]]
 	then
@@ -210,4 +210,3 @@ echo "### Action finished."
 echo ""
 
 exit 0
-
