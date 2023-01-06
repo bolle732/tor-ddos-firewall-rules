@@ -24,7 +24,7 @@ Currently missing is a command for cleaning up the blocking ipsets.
 
 This script needs Bash and use a lot of it array and string handling functions.
 
-## Install the script:
+## Install the script
 Copy the configured script to the system folder
 ```
 cp tor_ddos_setup_firewall.sh /usr/local/bin/
