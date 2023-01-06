@@ -19,6 +19,6 @@ Executing the script with only the parameters above will print the commands with
 
 `./tor_ddos_setup_firewall.sh refresh` will print only the commands of refresh.
 
-`./tor_ddos_setup_firewall.sh refresh` will execute the commands of refresh.
+`./tor_ddos_setup_firewall.sh refresh exec` will execute the commands of refresh.
 
 Currently missing is a command for cleaning up the blocking ipsets.
