@@ -8,7 +8,7 @@ If you don't have an IPv6 address, set the variable `U_OR_6_PORTS` to `""`.
 
 If you don't want to specify the IP address, use the form of `*:9001` or `[::]:9001`.
 
-The script currently knows two argument: `setup` or `refresh`. With `setup`, the firewall rules are installed. With `refresh`, the allow list will be refreshed with the new Tor authority and snowflake IPs.
+The script currently knows four arguments: `setup`, `refresh`, `unblock-all`, `unblock-dual`. With `setup`, the firewall rules are installed. With `refresh`, the allow list will be refreshed with the new Tor authority and snowflake IPs. The `unblock-*` are used to remove Tor relays from the block list. Either only Tor relays with two instances or all together.
 
 Executing the script with only the parameters above will print the commands without executing them. To execute the commands, specify the second paramter `exec`.
 
@@ -20,7 +20,14 @@ Executing the script with only the parameters above will print the commands with
 
 `./tor_ddos_setup_firewall.sh refresh exec` will execute the commands of refresh.
 
-Currently missing is a command for cleaning up the blocking ipsets.
+`./tor_ddos_setup_firewall.sh unblock-all` will print only the commands of unblocking all Tor relays.
+
+`./tor_ddos_setup_firewall.sh unblock-all exec` will execute the commands of unblocking all Tor relays.
+
+`./tor_ddos_setup_firewall.sh unblock-dual` will print only the commands of unblocking dual Tor relays.
+
+`./tor_ddos_setup_firewall.sh unblock-dual exec` will execute the commands of unblocking dual Tor relays.
+
 
 This script needs Bash and use a lot of it array and string handling functions.
 
