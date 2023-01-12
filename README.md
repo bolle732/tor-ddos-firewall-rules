@@ -12,6 +12,8 @@ The script currently knows four arguments: `setup`, `refresh`, `unblock-all`, `u
 
 Executing the script with only the parameters above will print the commands without executing them. To execute the commands, specify the second paramter `exec`.
 
+`./tor_ddos_setup_firewall.sh config` will print the script configuration.
+
 `./tor_ddos_setup_firewall.sh setup` will print only the commands of setup.
 
 `./tor_ddos_setup_firewall.sh setup exec` will execute the commands of setup.
