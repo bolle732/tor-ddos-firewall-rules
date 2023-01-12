@@ -14,7 +14,7 @@ G_TOR_4_OR_DUAL_FILE="$G_TOR_REPRO/dual-or.txt"
 
 G_POX_MODE=""
 
-G_INFO="v1.0.4 - 20220111 - bolle@geodb.org"
+G_INFO="v1.1.0 - 20220112 - bolle@geodb.org"
 
 declare -A G_IP4=(
 	[b]="iptables" [f]="inet" [m]="32" [v]="4"
@@ -60,14 +60,23 @@ flushRules() {
 	local -n L_IP="$1"
 	echo "### Flushing current iptable rules..."
 	porx "${L_IP[b]} -t mangle -F"
+	porx "sleep 1"
 	echo ""
 	return
 }
 
 destroySets() {
+	local -n L_IP="$1"
 	echo "### Destroying current iptable sets..."
-	porx "sleep 1"
-	porx "ipset destroy"
+	L_SETS=$(ipset -L -n)
+	for i in $L_SETS
+	do
+		if [[ $i =~ "tor_${L_IP[v]}_is_".* ]]
+		then
+			echo "### Processing ipset $i"
+			porx "ipset destroy $i"
+		fi
+	done
 	echo ""
 	return
 }
@@ -248,10 +257,60 @@ unblockTorORsDual()
 
 # MAIN
 
+printConfig()
+{
+	echo "Script configuration:"
+	echo ""
+	echo "User variable   : 'U_OR_4_PORTS'"
+	echo "Current value   : '$U_OR_4_PORTS'"
+	echo ""
+	echo " Space seperated list of local IPv4 address / OR port combinations"
+	echo " of the Tor relays to be protected with this script."
+	echo ""
+	echo " This variable MUST not be empty!"
+	echo ""
+	echo " Examples:"
+	echo " U_OR_4_PORTS=\"*:80 192.0.2.2:443 203.0.113.2:9001\""
+	echo ""
+	echo ""
+	echo "User variable   : 'U_OR_6_PORTS'"
+	echo "Current value   : '$U_OR_6_PORTS'"
+	echo ""
+	echo " Space seperated list of local IPv6 address / OR port combinations"
+	echo " of the Tor relays to be protected with this script."
+	echo ""
+	echo " Set this variable to an empty string if not using IPv6."
+	echo ""
+	echo " Examples:"
+	echo " U_OR_6_PORTS=\"[::]:80 [2001:DB8::2]:443 [2001:DB8::3]:995\""
+	echo ""
+	echo ""
+	echo "Global variable : 'G_TMP_PATH'"
+	echo "Current value   : '$G_TMP_PATH'"
+	echo ""
+	echo " The path to a folder where this script can store its files."
+	echo ""
+	echo " Default:"
+	echo " G_TMP_PATH=\"/var/tmp\""
+	echo ""
+	echo ""
+	echo "Other global variables:"
+	echo " 'G_TOR_REPRO'          : '$G_TOR_REPRO'"
+	echo " 'G_TOR_4_ALLOW_FILES'  : '$G_TOR_4_ALLOW_FILES'"
+	echo " 'G_TOR_6_ALLOW_FILES'  : '$G_TOR_6_ALLOW_FILES'"
+	echo " 'G_TOR_4_OR_ALL_FILE'  : '$G_TOR_4_OR_ALL_FILE'"
+	echo " 'G_TOR_4_OR_DUAL_FILE' : '$G_TOR_4_OR_DUAL_FILE'"
+	echo ""
+}
+
 printUsage()
 {
 	echo "Script usage:"
 	echo " ./${0##*/} <ACTION> [OPTION]"
+	echo ""
+	echo "<ACTION> = 'config':"
+	echo " The action 'config' will print the user paramter of this"
+	echo " script."
 	echo ""
 	echo "<ACTION> = 'setup':"
 	echo " The action 'setup' will setup your system and install the"
@@ -300,18 +359,22 @@ echo "### Mode is '$G_POX_MODE'"
 echo ""
 
 case "$1" in
+"config" )
+	printConfig
+;;
 "setup" )
 	if [[ -n "$U_OR_4_PORTS" ]]
 	then
 		backupRules G_IP4
 		flushRules G_IP4
+		destroySets G_IP4
 	fi
 	if [[ -n "$U_OR_6_PORTS" ]]
 	then
 		backupRules G_IP6
 		flushRules G_IP6
+		destroySets G_IP6
 	fi
-	destroySets
 	setupSystem
 	if [[ -n "$U_OR_4_PORTS" ]]
 	then
@@ -357,7 +420,7 @@ case "$1" in
 	fi
 ;;
 * )
-	echo "### NO KNOWN ACTION SPECIFIED"
+	echo "### NONE OR UNKNOWN ACTION SPECIFIED"
 	echo ""
 	printUsage
 esac
