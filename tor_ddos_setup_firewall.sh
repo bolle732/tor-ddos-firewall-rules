@@ -10,7 +10,9 @@ G_TOR_REPRO="https://raw.githubusercontent.com/Enkidu-6/tor-relay-lists/main"
 G_TOR_4_ALLOW_FILES="$G_TOR_REPRO/authorities-v4.txt $G_TOR_REPRO/snowflake.txt"
 G_TOR_6_ALLOW_FILES="$G_TOR_REPRO/authorities-v6.txt $G_TOR_REPRO/snowflake-v6.txt"
 G_TOR_4_OR_ALL_FILE="$G_TOR_REPRO/relays-v4.txt"
+#G_TOR_6_OR_ALL_FILE="$G_TOR_REPRO/relays-v6.txt"
 G_TOR_4_OR_DUAL_FILE="$G_TOR_REPRO/dual-or.txt"
+G_TOR_6_OR_DUAL_FILE="$G_TOR_REPRO/dual-or-v6.txt"
 
 G_POX_MODE=""
 
@@ -299,7 +301,9 @@ printConfig()
 	echo " 'G_TOR_4_ALLOW_FILES'  : '$G_TOR_4_ALLOW_FILES'"
 	echo " 'G_TOR_6_ALLOW_FILES'  : '$G_TOR_6_ALLOW_FILES'"
 	echo " 'G_TOR_4_OR_ALL_FILE'  : '$G_TOR_4_OR_ALL_FILE'"
+#	echo " 'G_TOR_6_OR_ALL_FILE'  : '$G_TOR_6_OR_ALL_FILE'"
 	echo " 'G_TOR_4_OR_DUAL_FILE' : '$G_TOR_4_OR_DUAL_FILE'"
+	echo " 'G_TOR_6_OR_DUAL_FILE' : '$G_TOR_6_OR_DUAL_FILE'"
 	echo ""
 }
 
@@ -417,6 +421,11 @@ case "$1" in
 	then
 		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
 		unblockTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+	fi
+	if [[ -n "$U_OR_4_PORTS" ]]
+	then
+		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		unblockTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
 	fi
 ;;
 * )
