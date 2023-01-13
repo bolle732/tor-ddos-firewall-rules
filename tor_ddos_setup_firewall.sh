@@ -16,7 +16,7 @@ G_TOR_6_OR_DUAL_FILE="$G_TOR_REPRO/dual-or-v6.txt"
 
 G_POX_MODE=""
 
-G_INFO="v1.1.0 - 20220112 - bolle@geodb.org"
+G_INFO="v1.2.0 - 20220113 - bolle@geodb.org"
 
 declare -A G_IP4=(
 	[b]="iptables" [f]="inet" [m]="32" [v]="4"
