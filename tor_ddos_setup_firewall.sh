@@ -422,7 +422,7 @@ case "$1" in
 		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
 		unblockTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
 	fi
-	if [[ -n "$U_OR_4_PORTS" ]]
+	if [[ -n "$U_OR_6_PORTS" ]]
 	then
 		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
 		unblockTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
