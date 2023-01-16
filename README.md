@@ -50,24 +50,30 @@ Starting the script without an option as the second argument will only print the
 
 `./tor_ddos_setup_firewall.sh unblock-dual exec` will execute the commands of unblocking dual Tor relays.
 
-## Install the script
-Copy the configured script to the system folder
+## Installation
+You must install the script by hand.
+
+- Edit the user variables to reflect your configuration
+
+- Copy the configured script to the system folder
 ```
 cp tor_ddos_setup_firewall.sh /usr/local/bin/
 ```
-and set the permissions
+- Set up the file permissions
 ```
 chmod 755 /usr/local/bin/tor_ddos_setup_firewall.sh
 chown root: /usr/local/bin/tor_ddos_setup_firewall.sh
 ```
-and edit the user variables to reflect your configuration.
 
-## Setup SystemD to start the script at startup
-Create companion folder for SystemD network daemon
+## SystemD integration
+You can use SystemD to execute the script during startup.
+
+- Create companion folder for SystemD network daemon
 ```
 mkdir /etc/systemd/system/systemd-networkd.service.d
 ```
-Create a configuration file that will executed after network startup
+
+- Create a configuration file that will be executed after network startup
 ```
 vi /etc/systemd/system/systemd-networkd.service.d/tor-ddos-setup-firewall.conf
 ```
@@ -76,13 +82,16 @@ with this content
 [Service]
 ExecStartPost=/usr/local/bin/tor_ddos_setup_firewall.sh setup exec
 ```
-Reload SystemD configuration
+
+- Reload SystemD configuration
 ```
 systemctl daemon-reload
 ```
 
-## Setup daily refresh of allow IPs
-Open your crontab file
+## Refresh Tor allow IPs
+You should regulary refresh the IP addresses of the Tor authorities and snowflakes.
+
+- Edit your Cron configuration file
 ```
 crontab -e
 ```
