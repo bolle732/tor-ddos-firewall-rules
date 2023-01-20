@@ -2,7 +2,7 @@
 
 ## Preface
 
-This script is based on the script(s) of https://github.com/Enkidu-6/tor-ddos. You can find there more information. This script should create more or less the same firewall rules. The names of the ipsets, recent lists and hash limits differs. Also the iptables parameter for the destination ports are unified.
+This script is based on the script(s) of https://github.com/Enkidu-6/tor-ddos. You can find there more information. This script should create more or less the same firewall rules. Also the names of the ipsets and recent lists differs. Also the iptables parameter for the destination ports are unified.
 
 ## Basic
 
