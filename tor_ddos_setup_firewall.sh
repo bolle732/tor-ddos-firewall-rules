@@ -16,7 +16,7 @@ G_TOR_6_OR_DUAL_FILE="$G_TOR_REPRO/dual-or-v6.txt"
 
 G_POX_MODE=""
 
-G_INFO="v1.2.1 - 20230113 - bolle@geodb.org"
+G_INFO="v1.3.1 - 20230120 - bolle@geodb.org"
 
 declare -A G_IP4=(
 	[b]="iptables" [f]="inet" [m]="32" [v]="4"
@@ -115,10 +115,38 @@ getTorAllowIPs() {
 	return
 }
 
+getTorORsIPsAll()
+{
+	local -n L_IP="$1"
+	echo "### Getting IPs of all Tor onion routers..."
+	f="$G_TMP_PATH/tor-${L_IP[v]}-or-all"
+	downloadFiles "$2" "$f"
+	echo ""
+	return
+}
+
+getTorORsIPsDual()
+{
+	local -n L_IP="$1"
+	echo "### Getting IPs of dual Tor onion routers..."
+	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
+	downloadFiles "$2" "$f"
+	echo ""
+	return
+}
+
 createTorAllowList() {
 	local -n L_IP="$1"
 	echo "### Creating allow list for Tor authorities and snowflakes..."
 	porx "ipset create -exist tor_${L_IP[v]}_is_allow hash:ip family ${L_IP[f]}"
+	echo ""
+	return
+}
+
+createTorDualList() {
+	local -n L_IP="$1"
+	echo "### Creating allow list for Tor dual ORs..."
+	porx "ipset create -exist tor_${L_IP[v]}_is_dual hash:ip family ${L_IP[f]}"
 	echo ""
 	return
 }
@@ -141,11 +169,38 @@ loadTorAllowList() {
 	return
 }
 
+loadTorDualList() {
+	local -n L_IP="$1"
+	echo "### Adding IPs of Tor dual ORs to allow list..."
+	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
+	if [[ ! -f "$f" ]]
+	then
+		echo "### WARNING: File '$f' does not exist!"
+		echo ""
+		return
+	fi
+	for i in $(cat $f)
+	do
+		porx "ipset add -exist tor_${L_IP[v]}_is_dual $i"
+	done
+	echo ""
+	return
+}
+
 flushTorAllowList()
 {
 	local -n L_IP="$1"
 	echo "### Flushing allow list of Tor authorities and snowflakes..."
 	porx "ipset flush tor_${L_IP[v]}_is_allow"
+	echo ""
+	return
+}
+
+flushTorDualList()
+{
+	local -n L_IP="$1"
+	echo "### Flushing allow list of Tor dual ORs..."
+	porx "ipset flush tor_${L_IP[v]}_is_dual"
 	echo ""
 	return
 }
@@ -169,39 +224,18 @@ setupTorDDoSRules()
 		fi
 		s1="tor_${L_IP[v]}_is_${n}_${p}"
 		s2="tor_${L_IP[v]}_rt_${n}_${p}"
-		s3="tor_${L_IP[v]}_hl_${n}_${p}"
 		o1="-t mangle -I PREROUTING -p tcp"
 		o2="-t mangle -A PREROUTING -p tcp"
 		porx "ipset create -exist $s1 hash:ip family ${L_IP[f]} hashsize 4096 timeout 43200"
 		porx "${L_IP[b]} $o1 $d -m set --match-set tor_${L_IP[v]}_is_allow src -j ACCEPT"
 		porx "${L_IP[b]} $o2 $d -m recent --name $s2 --set"
+		porx "${L_IP[b]} $o2 $d -m set --match-set tor_${L_IP[v]}_is_dual src -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-upto 2 -j ACCEPT"
 		porx "${L_IP[b]} $o2 $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 2 -j SET --add-set $s1 src"
 		porx "${L_IP[b]} $o2 $d -m set --match-set $s1 src -j DROP"
-		porx "${L_IP[b]} $o2 --syn $d -m hashlimit --hashlimit-name $s3 --hashlimit-mode srcip --hashlimit-srcmask 32 --hashlimit-above 30/hour --hashlimit-burst 4 --hashlimit-htable-expire 120000 -j DROP"
-		porx "${L_IP[b]} $o2 --syn $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 2 -j DROP"
+		porx "${L_IP[b]} $o2 $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 1 -j DROP"
 		porx "${L_IP[b]} $o2 $d -j ACCEPT"
 		echo ""
 	done
-	return
-}
-
-getTorORsIPsAll()
-{
-	local -n L_IP="$1"
-	echo "### Getting IPs of all Tor onion routers..."
-	f="$G_TMP_PATH/tor-${L_IP[v]}-or-all"
-	downloadFiles "$2" "$f"
-	echo ""
-	return
-}
-
-getTorORsIPsDual()
-{
-	local -n L_IP="$1"
-	echo "### Getting IPs of dual Tor onion routers..."
-	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
-	downloadFiles "$2" "$f"
-	echo ""
 	return
 }
 
@@ -385,6 +419,9 @@ case "$1" in
 		getTorAllowIPs G_IP4 "$G_TOR_4_ALLOW_FILES"
 		createTorAllowList G_IP4
 		loadTorAllowList G_IP4
+		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+		createTorDualList G_IP4
+		loadTorDualList G_IP4
 		setupTorDDoSRules G_IP4 "$U_OR_4_PORTS"
 	fi
 	if [[ -n "$U_OR_6_PORTS" ]]
@@ -392,6 +429,9 @@ case "$1" in
 		getTorAllowIPs G_IP6 "$G_TOR_6_ALLOW_FILES"
 		createTorAllowList G_IP6
 		loadTorAllowList G_IP6
+		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		createTorDualList G_IP6
+		loadTorDualList G_IP6
 		setupTorDDoSRules G_IP6 "$U_OR_6_PORTS"
 	fi
 ;;
@@ -401,12 +441,18 @@ case "$1" in
 		getTorAllowIPs G_IP4 "$G_TOR_4_ALLOW_FILES"
 		flushTorAllowList G_IP4
 		loadTorAllowList G_IP4
+		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+		flushTorDualList G_IP4
+		loadTorDualList G_IP4
 	fi
 	if [[ -n "$U_OR_6_PORTS" ]]
 	then
 		getTorAllowIPs G_IP6 "$G_TOR_6_ALLOW_FILES"
 		flushTorAllowList G_IP6
 		loadTorAllowList G_IP6
+		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		flushTorDualList G_IP6
+		loadTorDualList G_IP6
 	fi
 ;;
 "unblock-all" )
@@ -415,6 +461,11 @@ case "$1" in
 		getTorORsIPsAll G_IP4 "$G_TOR_4_OR_ALL_FILE"
 		unblockTorORsAll G_IP4 "$G_TOR_4_OR_ALL_FILE"
 	fi
+#	if [[ -n "$U_OR_6_PORTS" ]]
+#	then
+#		getTorORsIPsAll G_IP6 "$G_TOR_6_OR_ALL_FILE"
+#		unblockTorORsAll G_IP6 "$G_TOR_6_OR_ALL_FILE"
+#	fi
 ;;
 "unblock-dual" )
 	if [[ -n "$U_OR_4_PORTS" ]]
