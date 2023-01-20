@@ -23,7 +23,7 @@ The script is executed in this form:
 The script currently knows five actions specified by the first argument:
 
 - Use `config` to print the script variables to the console.
-- Use `setup` to install the firewall rules.
+- Use `setup` to setup system and install the firewall rules.
 - Use `refresh` to update the allow ipsets with the current Tor authorities, snowflakes and Tor relays with dual IPs.
 - Use `unblock-all` to remove all Tor relays from the block ipset.
 - Use `unblock-dual` to remove only Tor relays with dual IPs from the block ipset.
