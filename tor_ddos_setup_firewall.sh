@@ -16,7 +16,7 @@ G_TOR_6_OR_DUAL_FILE="$G_TOR_REPRO/dual-or-v6.txt"
 
 G_POX_MODE=""
 
-G_INFO="v1.3.1 - 20230120 - bolle@geodb.org"
+G_INFO="v1.4.0 - 20230123 - bolle@geodb.org"
 
 declare -A G_IP4=(
 	[b]="iptables" [f]="inet" [m]="32" [v]="4"
@@ -230,6 +230,7 @@ setupTorDDoSRules()
 		porx "${L_IP[b]} $o1 $d -m set --match-set tor_${L_IP[v]}_is_allow src -j ACCEPT"
 		porx "${L_IP[b]} $o2 $d -m recent --name $s2 --set"
 		porx "${L_IP[b]} $o2 $d -m set --match-set tor_${L_IP[v]}_is_dual src -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-upto 2 -j ACCEPT"
+		porx "${L_IP[b]} $o2 --syn $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 2 -j SET --add-set $s1 src"
 		porx "${L_IP[b]} $o2 $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 2 -j SET --add-set $s1 src"
 		porx "${L_IP[b]} $o2 $d -m set --match-set $s1 src -j DROP"
 		porx "${L_IP[b]} $o2 $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 1 -j DROP"
