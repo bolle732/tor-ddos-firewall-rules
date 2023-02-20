@@ -26,7 +26,7 @@ The script currently knows five actions specified by the first argument:
 - Use `setup` to setup system and install the firewall rules.
 - Use `refresh` to update the allow ipsets with the current Tor authorities, snowflakes and Tor relays with dual IPs.
 - Use `unblock-dual` to remove Tor relays with 2 instances from the block ipset.
-- Use `unblock-quand` to remove Tor relays with more then 2 instances from the block ipset.
+- Use `unblock-quad` to remove Tor relays with more then 2 instances from the block ipset.
 
 Starting the script without an option as the second argument will only print the commands to the console without executing them. To really execute the commands, you must specify the option `exec`.
 
