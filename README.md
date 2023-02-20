@@ -25,7 +25,7 @@ The script currently knows five actions specified by the first argument:
 - Use `config` to print the script variables to the console.
 - Use `setup` to setup system and install the firewall rules.
 - Use `refresh` to update the allow ipsets with the current Tor authorities, snowflakes and Tor relays with dual IPs.
-- Use `unblock-dual` to remove Tor relays with up to 2 instances from the block ipset.
+- Use `unblock-dual` to remove Tor relays with 2 instances from the block ipset.
 - Use `unblock-quand` to remove Tor relays with more then 2 instances from the block ipset.
 
 Starting the script without an option as the second argument will only print the commands to the console without executing them. To really execute the commands, you must specify the option `exec`.
@@ -42,9 +42,9 @@ Starting the script without an option as the second argument will only print the
 
 `./tor_ddos_setup_firewall.sh refresh exec` will execute the commands of refresh.
 
-`./tor_ddos_setup_firewall.sh unblock-dual` will print only the commands of unblocking Tor relays with up to 2 instances.
+`./tor_ddos_setup_firewall.sh unblock-dual` will print only the commands of unblocking Tor relays with 2 instances.
 
-`./tor_ddos_setup_firewall.sh unblock-dual exec` will execute the commands of unblocking Tor relays with up to 2 instances.
+`./tor_ddos_setup_firewall.sh unblock-dual exec` will execute the commands of unblocking Tor relays with 2 instances.
 
 `./tor_ddos_setup_firewall.sh unblock-quad` will print only the commands of unblocking Tor relays with more then 2 instances.
 
