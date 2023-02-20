@@ -16,7 +16,7 @@ G_TOR_6_OR_QUAD_FILE="$G_TOR_REPRO/above2-or-v6.txt"
 
 G_POX_MODE=""
 
-G_INFO="v1.5.2 - 20230220 - bolle@geodb.org"
+G_INFO="v1.5.3 - 20230220 - bolle@geodb.org"
 
 declare -A G_IP4=(
 	[b]="iptables" [f]="inet" [m]="32" [v]="4"
@@ -118,7 +118,7 @@ getIPsTorAllow() {
 getIPsTorORsDual()
 {
 	local -n L_IP="$1"
-	echo "### Getting IPs of Tor onion routers running up to 2 instances..."
+	echo "### Getting IPs of Tor onion routers running 2 instances..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
 	downloadFiles "$2" "$f"
 	echo ""
@@ -145,7 +145,7 @@ createListTorAllow() {
 
 createListTorORsDual() {
 	local -n L_IP="$1"
-	echo "### Creating allow list for Tor onion routers running up to 2 instances..."
+	echo "### Creating allow list for Tor onion routers running 2 instances..."
 	porx "ipset create -exist tor_${L_IP[v]}_is_dual hash:ip family ${L_IP[f]}"
 	echo ""
 	return
@@ -179,7 +179,7 @@ loadListTorAllow() {
 
 loadListTorORsDual() {
 	local -n L_IP="$1"
-	echo "### Loading allow list with IPs of Tor onion routers running up to 2 instances..."
+	echo "### Loading allow list with IPs of Tor onion routers running 2 instances..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
 	if [[ ! -f "$f" ]]
 	then
@@ -225,7 +225,7 @@ flushListTorAllow()
 flushListTorORsDual()
 {
 	local -n L_IP="$1"
-	echo "### Flushing allow list of Tor onion routers running up to 2 instances..."
+	echo "### Flushing allow list of Tor onion routers running 2 instances..."
 	porx "ipset flush tor_${L_IP[v]}_is_dual"
 	echo ""
 	return
@@ -308,7 +308,7 @@ unblockIPs()
 unblockIPsTorORsDual()
 {
 	local -n L_IP="$1"
-	echo "### Unblocking IPs of Tor onion routers running up to 2 instances..."
+	echo "### Unblocking IPs of Tor onion routers running 2 instances..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
 	unblockIPs "${L_IP[v]}" "$f"
 	echo ""
@@ -391,12 +391,12 @@ printUsage()
 	echo " the new IP addresses of the Tor authorities and snowflakes."
 	echo ""
 	echo "<ACTION> = 'unblock-dual':"
-	echo " The action 'unblock-dual' will remove dual instance Tor relays"
+	echo " The action 'unblock-dual' will remove Tor relays with 2 instances"
 	echo " from the firewall block lists."
 	echo ""
 	echo "<ACTION> = 'unblock-quad':"
-	echo " The action 'unblock-quad' will remove quad instance Tor relays"
-	echo " from the firewall block lists."
+	echo " The action 'unblock-quad' will remove Tor relays with more then"
+	echo " 2 instances (up to 4) from the firewall block lists."
 	echo ""
 	echo "<ACTION> = '*':"
 	echo " Specifying an empty or a unknown action will print this usage."
