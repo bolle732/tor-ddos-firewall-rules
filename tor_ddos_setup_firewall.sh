@@ -9,14 +9,14 @@ G_TMP_PATH="/var/tmp"
 G_TOR_REPRO="https://raw.githubusercontent.com/Enkidu-6/tor-relay-lists/main"
 G_TOR_4_ALLOW_FILES="$G_TOR_REPRO/authorities-v4.txt $G_TOR_REPRO/snowflake.txt"
 G_TOR_6_ALLOW_FILES="$G_TOR_REPRO/authorities-v6.txt $G_TOR_REPRO/snowflake-v6.txt"
-G_TOR_4_OR_ALL_FILE="$G_TOR_REPRO/relays-v4.txt"
-#G_TOR_6_OR_ALL_FILE="$G_TOR_REPRO/relays-v6.txt"
-G_TOR_4_OR_DUAL_FILE="$G_TOR_REPRO/dual-or.txt"
-G_TOR_6_OR_DUAL_FILE="$G_TOR_REPRO/dual-or-v6.txt"
+G_TOR_4_OR_DUAL_FILE="$G_TOR_REPRO/2-or.txt"
+G_TOR_6_OR_DUAL_FILE="$G_TOR_REPRO/2-or-v6.txt"
+G_TOR_4_OR_QUAD_FILE="$G_TOR_REPRO/above2-or.txt"
+G_TOR_6_OR_QUAD_FILE="$G_TOR_REPRO/above2-or-v6.txt"
 
 G_POX_MODE=""
 
-G_INFO="v1.4.0 - 20230123 - bolle@geodb.org"
+G_INFO="v1.5.2 - 20230220 - bolle@geodb.org"
 
 declare -A G_IP4=(
 	[b]="iptables" [f]="inet" [m]="32" [v]="4"
@@ -106,7 +106,7 @@ downloadFiles()
 	return
 }
 
-getTorAllowIPs() {
+getIPsTorAllow() {
 	local -n L_IP="$1"
 	echo "### Getting IPs of Tor authorities and snowflakes..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-allow-list"
@@ -115,27 +115,27 @@ getTorAllowIPs() {
 	return
 }
 
-getTorORsIPsAll()
+getIPsTorORsDual()
 {
 	local -n L_IP="$1"
-	echo "### Getting IPs of all Tor onion routers..."
-	f="$G_TMP_PATH/tor-${L_IP[v]}-or-all"
-	downloadFiles "$2" "$f"
-	echo ""
-	return
-}
-
-getTorORsIPsDual()
-{
-	local -n L_IP="$1"
-	echo "### Getting IPs of dual Tor onion routers..."
+	echo "### Getting IPs of Tor onion routers running up to 2 instances..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
 	downloadFiles "$2" "$f"
 	echo ""
 	return
 }
 
-createTorAllowList() {
+getIPsTorORsQuad()
+{
+	local -n L_IP="$1"
+	echo "### Getting IPs of Tor onion routers running more then 2 instances..."
+	f="$G_TMP_PATH/tor-${L_IP[v]}-or-quad"
+	downloadFiles "$2" "$f"
+	echo ""
+	return
+}
+
+createListTorAllow() {
 	local -n L_IP="$1"
 	echo "### Creating allow list for Tor authorities and snowflakes..."
 	porx "ipset create -exist tor_${L_IP[v]}_is_allow hash:ip family ${L_IP[f]}"
@@ -143,17 +143,25 @@ createTorAllowList() {
 	return
 }
 
-createTorDualList() {
+createListTorORsDual() {
 	local -n L_IP="$1"
-	echo "### Creating allow list for Tor dual ORs..."
+	echo "### Creating allow list for Tor onion routers running up to 2 instances..."
 	porx "ipset create -exist tor_${L_IP[v]}_is_dual hash:ip family ${L_IP[f]}"
 	echo ""
 	return
 }
 
-loadTorAllowList() {
+createListTorORsQuad() {
 	local -n L_IP="$1"
-	echo "### Adding IPs of Tor authorities and snowflakes to allow list..."
+	echo "### Creating allow list for Tor onion routers running more then 2 instances..."
+	porx "ipset create -exist tor_${L_IP[v]}_is_quad hash:ip family ${L_IP[f]}"
+	echo ""
+	return
+}
+
+loadListTorAllow() {
+	local -n L_IP="$1"
+	echo "### Loading allow list with IPs of Tor authorities and snowflakes..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-allow-list"
 	if [[ ! -f "$f" ]]
 	then
@@ -169,9 +177,9 @@ loadTorAllowList() {
 	return
 }
 
-loadTorDualList() {
+loadListTorORsDual() {
 	local -n L_IP="$1"
-	echo "### Adding IPs of Tor dual ORs to allow list..."
+	echo "### Loading allow list with IPs of Tor onion routers running up to 2 instances..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
 	if [[ ! -f "$f" ]]
 	then
@@ -187,7 +195,25 @@ loadTorDualList() {
 	return
 }
 
-flushTorAllowList()
+loadListTorORsQuad() {
+	local -n L_IP="$1"
+	echo "### Loading allow list with IPs of Tor onion routers running more then 2 instances..."
+	f="$G_TMP_PATH/tor-${L_IP[v]}-or-quad"
+	if [[ ! -f "$f" ]]
+	then
+		echo "### WARNING: File '$f' does not exist!"
+		echo ""
+		return
+	fi
+	for i in $(cat $f)
+	do
+		porx "ipset add -exist tor_${L_IP[v]}_is_quad $i"
+	done
+	echo ""
+	return
+}
+
+flushListTorAllow()
 {
 	local -n L_IP="$1"
 	echo "### Flushing allow list of Tor authorities and snowflakes..."
@@ -196,16 +222,25 @@ flushTorAllowList()
 	return
 }
 
-flushTorDualList()
+flushListTorORsDual()
 {
 	local -n L_IP="$1"
-	echo "### Flushing allow list of Tor dual ORs..."
+	echo "### Flushing allow list of Tor onion routers running up to 2 instances..."
 	porx "ipset flush tor_${L_IP[v]}_is_dual"
 	echo ""
 	return
 }
 
-setupTorDDoSRules()
+flushListTorORsQuad()
+{
+	local -n L_IP="$1"
+	echo "### Flushing allow list of Tor onion routers running more then 2 instances..."
+	porx "ipset flush tor_${L_IP[v]}_is_quad"
+	echo ""
+	return
+}
+
+setupRulesTorDDoS()
 {
 	local -n L_IP="$1"
 	echo "### Setting up firewall rules against Tor DDoS..."
@@ -229,6 +264,7 @@ setupTorDDoSRules()
 		porx "ipset create -exist $s1 hash:ip family ${L_IP[f]} hashsize 4096 timeout 43200"
 		porx "${L_IP[b]} $o1 $d -m set --match-set tor_${L_IP[v]}_is_allow src -j ACCEPT"
 		porx "${L_IP[b]} $o2 $d -m recent --name $s2 --set"
+		porx "${L_IP[b]} $o2 $d -m set --match-set tor_${L_IP[v]}_is_quad src -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-upto 4 -j ACCEPT"
 		porx "${L_IP[b]} $o2 $d -m set --match-set tor_${L_IP[v]}_is_dual src -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-upto 2 -j ACCEPT"
 		porx "${L_IP[b]} $o2 --syn $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 2 -j SET --add-set $s1 src"
 		porx "${L_IP[b]} $o2 $d -m connlimit --connlimit-mask ${L_IP[m]} --connlimit-above 2 -j SET --add-set $s1 src"
@@ -240,7 +276,7 @@ setupTorDDoSRules()
 	return
 }
 
-unblockIPAddresses()
+unblockIPs()
 {
 	echo "### Processing file '$2'"
 	if [[ ! -f "$2" ]]
@@ -269,30 +305,25 @@ unblockIPAddresses()
 	return
 }
 
-unblockTorORsAll()
+unblockIPsTorORsDual()
 {
 	local -n L_IP="$1"
-	echo "### Unblocking all Tor onion routers..."
-	f="$G_TMP_PATH/tor-${L_IP[v]}-or-all"
-	unblockIPAddresses "${L_IP[v]}" "$f"
-	echo ""
-	return
-}
-
-unblockTorORsDual()
-{
-	local -n L_IP="$1"
-	echo "### Unblocking dual Tor onion routers..."
+	echo "### Unblocking IPs of Tor onion routers running up to 2 instances..."
 	f="$G_TMP_PATH/tor-${L_IP[v]}-or-dual"
-	unblockIPAddresses "${L_IP[v]}" "$f"
+	unblockIPs "${L_IP[v]}" "$f"
 	echo ""
 	return
 }
 
-
-
-
-# MAIN
+unblockIPsTorORsQuad()
+{
+	local -n L_IP="$1"
+	echo "### Unblocking IPs of Tor onion routers running more then 2 instances..."
+	f="$G_TMP_PATH/tor-${L_IP[v]}-or-quad"
+	unblockIPs "${L_IP[v]}" "$f"
+	echo ""
+	return
+}
 
 printConfig()
 {
@@ -335,10 +366,10 @@ printConfig()
 	echo " 'G_TOR_REPRO'          : '$G_TOR_REPRO'"
 	echo " 'G_TOR_4_ALLOW_FILES'  : '$G_TOR_4_ALLOW_FILES'"
 	echo " 'G_TOR_6_ALLOW_FILES'  : '$G_TOR_6_ALLOW_FILES'"
-	echo " 'G_TOR_4_OR_ALL_FILE'  : '$G_TOR_4_OR_ALL_FILE'"
-#	echo " 'G_TOR_6_OR_ALL_FILE'  : '$G_TOR_6_OR_ALL_FILE'"
 	echo " 'G_TOR_4_OR_DUAL_FILE' : '$G_TOR_4_OR_DUAL_FILE'"
 	echo " 'G_TOR_6_OR_DUAL_FILE' : '$G_TOR_6_OR_DUAL_FILE'"
+	echo " 'G_TOR_4_OR_QUAD_FILE' : '$G_TOR_4_OR_QUAD_FILE'"
+	echo " 'G_TOR_6_OR_QUAD_FILE' : '$G_TOR_6_OR_QUAD_FILE'"
 	echo ""
 }
 
@@ -359,13 +390,13 @@ printUsage()
 	echo " The action 'refresh' will update the firewall allow list with"
 	echo " the new IP addresses of the Tor authorities and snowflakes."
 	echo ""
-	echo "<ACTION> = 'unblock-all':"
-	echo " The action 'unblock-all' will remove all Tor relays from the"
-	echo " firewall block lists."
-	echo ""
 	echo "<ACTION> = 'unblock-dual':"
-	echo " The action 'unblock-dual' will remove only dual Tor relays from"
-	echo " the firewall block lists."
+	echo " The action 'unblock-dual' will remove dual instance Tor relays"
+	echo " from the firewall block lists."
+	echo ""
+	echo "<ACTION> = 'unblock-quad':"
+	echo " The action 'unblock-quad' will remove quad instance Tor relays"
+	echo " from the firewall block lists."
 	echo ""
 	echo "<ACTION> = '*':"
 	echo " Specifying an empty or a unknown action will print this usage."
@@ -382,6 +413,9 @@ printUsage()
 	echo " the commands without executing them."
 	echo ""
 }
+
+
+# MAIN
 
 echo "### Tor DDoS setup firewall script: $G_INFO"
 echo ""
@@ -417,67 +451,79 @@ case "$1" in
 	setupSystem
 	if [[ -n "$U_OR_4_PORTS" ]]
 	then
-		getTorAllowIPs G_IP4 "$G_TOR_4_ALLOW_FILES"
-		createTorAllowList G_IP4
-		loadTorAllowList G_IP4
-		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
-		createTorDualList G_IP4
-		loadTorDualList G_IP4
-		setupTorDDoSRules G_IP4 "$U_OR_4_PORTS"
+		getIPsTorAllow G_IP4 "$G_TOR_4_ALLOW_FILES"
+		createListTorAllow G_IP4
+		loadListTorAllow G_IP4
+		getIPsTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+		createListTorORsDual G_IP4
+		loadListTorORsDual G_IP4
+		getIPsTorORsQuad G_IP4 "$G_TOR_4_OR_QUAD_FILE"
+		createListTorORsQuad G_IP4
+		loadListTorORsQuad G_IP4
+		setupRulesTorDDoS G_IP4 "$U_OR_4_PORTS"
 	fi
 	if [[ -n "$U_OR_6_PORTS" ]]
 	then
-		getTorAllowIPs G_IP6 "$G_TOR_6_ALLOW_FILES"
-		createTorAllowList G_IP6
-		loadTorAllowList G_IP6
-		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
-		createTorDualList G_IP6
-		loadTorDualList G_IP6
-		setupTorDDoSRules G_IP6 "$U_OR_6_PORTS"
+		getIPsTorAllow G_IP6 "$G_TOR_6_ALLOW_FILES"
+		createListTorAllow G_IP6
+		loadListTorAllow G_IP6
+		getIPsTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		createListTorORsDual G_IP6
+		loadListTorORsDual G_IP6
+		getIPsTorORsQuad G_IP6 "$G_TOR_6_OR_QUAD_FILE"
+		createListTorORsQuad G_IP6
+		loadListTorORsQuad G_IP6
+		setupRulesTorDDoS G_IP6 "$U_OR_6_PORTS"
 	fi
 ;;
 "refresh" )
 	if [[ -n "$U_OR_4_PORTS" ]]
 	then
-		getTorAllowIPs G_IP4 "$G_TOR_4_ALLOW_FILES"
-		flushTorAllowList G_IP4
-		loadTorAllowList G_IP4
-		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
-		flushTorDualList G_IP4
-		loadTorDualList G_IP4
+		getIPsTorAllow G_IP4 "$G_TOR_4_ALLOW_FILES"
+		flushListTorAllow G_IP4
+		loadListTorAllow G_IP4
+		getIPsTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+		flushListTorORsDual G_IP4
+		loadListTorORsDual G_IP4
+		getIPsTorORsQuad G_IP4 "$G_TOR_4_OR_QUAD_FILE"
+		flushListTorORsQuad G_IP4
+		loadListTorORsQuad G_IP4
 	fi
 	if [[ -n "$U_OR_6_PORTS" ]]
 	then
-		getTorAllowIPs G_IP6 "$G_TOR_6_ALLOW_FILES"
-		flushTorAllowList G_IP6
-		loadTorAllowList G_IP6
-		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
-		flushTorDualList G_IP6
-		loadTorDualList G_IP6
+		getIPsTorAllow G_IP6 "$G_TOR_6_ALLOW_FILES"
+		flushListTorAllow G_IP6
+		loadListTorAllow G_IP6
+		getIPsTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		flushListTorORsDual G_IP6
+		loadListTorORsDual G_IP6
+		getIPsTorORsQuad G_IP6 "$G_TOR_6_OR_QUAD_FILE"
+		flushListTorORsQuad G_IP6
+		loadListTorORsQuad G_IP6
 	fi
-;;
-"unblock-all" )
-	if [[ -n "$U_OR_4_PORTS" ]]
-	then
-		getTorORsIPsAll G_IP4 "$G_TOR_4_OR_ALL_FILE"
-		unblockTorORsAll G_IP4 "$G_TOR_4_OR_ALL_FILE"
-	fi
-#	if [[ -n "$U_OR_6_PORTS" ]]
-#	then
-#		getTorORsIPsAll G_IP6 "$G_TOR_6_OR_ALL_FILE"
-#		unblockTorORsAll G_IP6 "$G_TOR_6_OR_ALL_FILE"
-#	fi
 ;;
 "unblock-dual" )
 	if [[ -n "$U_OR_4_PORTS" ]]
 	then
-		getTorORsIPsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
-		unblockTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+		getIPsTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
+		unblockIPsTorORsDual G_IP4 "$G_TOR_4_OR_DUAL_FILE"
 	fi
 	if [[ -n "$U_OR_6_PORTS" ]]
 	then
-		getTorORsIPsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
-		unblockTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		getIPsTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+		unblockIPsTorORsDual G_IP6 "$G_TOR_6_OR_DUAL_FILE"
+	fi
+;;
+"unblock-quad" )
+	if [[ -n "$U_OR_4_PORTS" ]]
+	then
+		getIPsTorORsQuad G_IP4 "$G_TOR_4_OR_QUAD_FILE"
+		unblockIPsTorORsQuad G_IP4 "$G_TOR_4_OR_QUAD_FILE"
+	fi
+	if [[ -n "$U_OR_6_PORTS" ]]
+	then
+		getIPsTorORsQuad G_IP6 "$G_TOR_6_OR_QUAD_FILE"
+		unblockIPsTorORsQuad G_IP6 "$G_TOR_6_OR_QUAD_FILE"
 	fi
 ;;
 * )
